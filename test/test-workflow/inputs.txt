@@ -1,0 +1,3 @@
+INFILE=input/file.txt
+CHAR=a
+OUTPREFIX=ls-workflow
