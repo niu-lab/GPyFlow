@@ -18,13 +18,12 @@ def tar(dirpath):
 
 
 @click.command()
-@click.option('--macros', '-m', help="defined macros")
-@click.option('--exclude', '-x', help="exclude steps")
+@click.option('--inputs', '-i', help="defined macros")
 @click.option('--output_dir', '-o', required=True, help="output dir")
-@click.argument('flow')
-def run(macros, exclude, output_dir, flow):
+@click.argument('workflow')
+def run(inputs, output_dir, workflow):
     """run workflow"""
-    run_target(flow, output_dir, macros, exclude)
+    run_target(workflow, inputs, output_dir)
 
 
 cli.add_command(tar)

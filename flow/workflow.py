@@ -155,11 +155,11 @@ class WorkFlow(object):
 
 # run workflow directory
 def run_workflow(workflow_dir, inputs):
-    os.chdir(workflow_dir)
     workflow = WorkFlow()
     workflow_file = os.path.join(workflow_dir, "flow.json")
     workflow.load_from_file(workflow_file)
     workflow.read_inputs(inputs)
+    os.chdir(workflow_dir)
     workflow.init()
     workflow.work()
 
