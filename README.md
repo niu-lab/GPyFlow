@@ -1,4 +1,4 @@
-# GPyFLow
+# GPyFlow
 GPyFLow is simple and easy to run local workflow.
 
 # Install
