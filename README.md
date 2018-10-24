@@ -1,5 +1,5 @@
 # GPyFlow
-GPyFLow is simple and easy to run local workflow.
+GPyFlow is simple and easy to run local workflow.
 
 # Install
 ```angular2html
