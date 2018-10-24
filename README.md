@@ -92,27 +92,19 @@ wc -l #OUTPREFIX#.grep.out > #OUTPREFIX#.count.out
 # Workflow Directory
 ```angular2html
 workflow
-  - input/
   - flow.json
 ```
 - `flow.json` is the workflow definition。
-- `input` is the workflow input include init input files or script.
 
 # Command
 
 1. tar workflow directory to zip file
 ```angular2html
-flowc tar [dir]
+pyflow tar [dir]
 ```
 
 2. run workflow
 ```angular2html
-flowc run workflow.zip
-```
-
-# Example
-`test/test-workflow`
-```angular2html
-flowc tar test/test-workflow
-flowc run -i test/inputs.txt -o test/test_workflow test/test-workflow.zip
+pyflow run -i inputs.txt -o output_dir flow.json
+pyflow run -i inputs.txt -o output_dir workflow.zip
 ```

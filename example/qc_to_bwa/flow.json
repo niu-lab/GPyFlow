@@ -1,0 +1,118 @@
+{
+  "macros": {
+    "INPUT_DIR": "",
+    "R1": "",
+    "R2": "",
+    "NAME": "",
+    "REF": "",
+    "THREAD": "",
+    "R": ""
+  },
+  "workflow": {
+    "qc": {
+      "pres": [],
+      "input": [
+        "#INPUT_DIR#/#R1#",
+        "#INPUT_DIR#/#R2#"
+      ],
+      "output": [
+        "#R1#.clean.fq",
+        "#R2#.clean.fq"
+      ],
+      "command": {
+        "path": "fastp",
+        "parameters": [
+          {
+            "prefix": "-",
+            "key": "i",
+            "sep": " ",
+            "value": "#IN[0]#"
+          },
+          {
+            "prefix": "-",
+            "key": "I",
+            "sep": " ",
+            "value": "#IN[1]#"
+          },
+          {
+            "prefix": "-",
+            "key": "o",
+            "sep": " ",
+            "value": "#OUT[0]#"
+          },
+          {
+            "prefix": "-",
+            "key": "O",
+            "sep": " ",
+            "value": "#OUT[1]#"
+          }
+        ]
+      }
+    },
+    "align": {
+      "pres": [
+        "qc"
+      ],
+      "input": [
+        "#R1#.clean.fq",
+        "#R2#.clean.fq"
+      ],
+      "output": [
+        "#NAME#.sam"
+      ],
+      "command": {
+        "path": "bwa",
+        "parameters": [
+          {
+            "prefix": "",
+            "key": "",
+            "sep": "",
+            "value": "mem"
+          },
+          {
+            "prefix": "-",
+            "key": "t",
+            "sep": " ",
+            "value": "#THREAD#"
+          },
+          {
+            "prefix": "-",
+            "key": "M",
+            "sep": " ",
+            "value": ""
+          },
+          {
+            "prefix": "-",
+            "key": "R",
+            "sep": " ",
+            "value": "#R#"
+          },
+          {
+            "prefix": "",
+            "key": "",
+            "sep": "",
+            "value": "#REF#"
+          },
+          {
+            "prefix": "",
+            "key": "",
+            "sep": "",
+            "value": "#IN[0]#"
+          },
+          {
+            "prefix": "",
+            "key": "",
+            "sep": "",
+            "value": "#IN[1]#"
+          },
+          {
+            "prefix": "-",
+            "key": "o",
+            "sep": " ",
+            "value": "#OUT[0]#"
+          }
+        ]
+      }
+    }
+  }
+}

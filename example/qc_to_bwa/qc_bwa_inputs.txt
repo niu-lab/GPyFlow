@@ -1,0 +1,7 @@
+INPUT_DIR=/data/test/fastq_data/
+R1=test_small_test.1.fastq
+R2=test_small_test.2.fastq
+NAME=test
+REF=/data/ref/ucsc.hg19.fasta
+THREAD=8
+R='@RG\tID:test\tSM:test\tPL:test\tPL:Illumina'

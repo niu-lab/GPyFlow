@@ -94,6 +94,12 @@ ENV/
 *.log
 *.zip
 tmp/
-*.status
-*.out
+test/ref/
+rsync_to_yuan.sh
+exclude.txt
+.DS_Store
+.python-version
+example/*/out_dir/
+
+
 

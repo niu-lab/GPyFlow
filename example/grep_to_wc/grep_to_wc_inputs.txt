@@ -1,0 +1,3 @@
+INFILE=../data.txt
+CHAR=a
+OUTPREFIX=grep_to_wc

@@ -14,13 +14,10 @@ setup(
     include_package_data=True,
     zip_safe=False,
     platforms='linux',
-    python_requires='>=3.6',
-    install_requires=[
-        'click>=5.1',
-    ],
+    python_requires='>=3.5',
     entry_points={
         'console_scripts': [
-            'flowc = flow.flowc:main',
+            'pyflow = flow.gpyflow:main',
         ],
     }
 )
