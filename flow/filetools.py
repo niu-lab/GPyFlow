@@ -7,9 +7,12 @@ def dir_create(dir_path):
         os.mkdir(dir_path)
 
 
-def package(dir_path):
-    outfilename = "{}".format(dir_path)
-    shutil.make_archive(outfilename, 'zip', dir_path)
+def package(workflow_dir):
+    if not os.path.isabs(workflow_dir):
+        workflow_dir = os.path.join(os.curdir, workflow_dir)
+        workflow_dir = os.path.abspath(workflow_dir)
+    basename = os.path.basename(workflow_dir)
+    shutil.make_archive(basename, 'zip', workflow_dir)
 
 
 def get_file_firstname(filename):

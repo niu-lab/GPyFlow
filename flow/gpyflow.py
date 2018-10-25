@@ -1,6 +1,7 @@
 import argparse
 from flow.workflow import run_target
 from flow.filetools import package
+import os
 
 args = dict()
 
@@ -42,11 +43,11 @@ def run(inputs, out_dir, workflow):
 
 def main():
     handle_commadline()
-    if args.get("subparser") == "run":
+    if args.get("sub-command") == "run":
         run(args.get("input"),
             args.get("output"),
             args.get('workflow'))
-    if args.get("subparser") == "tar":
+    if args.get("sub-command") == "tar":
         tar(args.get("workflow_dir"))
 
 
