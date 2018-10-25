@@ -8,7 +8,8 @@ args = dict()
 def handle_commadline():
     global args
     parser = argparse.ArgumentParser(prog="pyflow")
-    subparsers = parser.add_subparsers(dest='subparser')
+    subparsers = parser.add_subparsers(dest='sub-command')
+    subparsers.required = True
     run_parser = subparsers.add_parser("run")
     tar_parser = subparsers.add_parser("tar")
 
@@ -22,9 +23,11 @@ def handle_commadline():
                             required=True,
                             help="output directory"
                             )
+    run_parser.add_argument("workflow",
+                            help="workflow directory or workflow.json")
 
-    parser.add_argument("workflow",
-                        help="workflow directory or workflow.json")
+    tar_parser.add_argument("workflow_dir",
+                            help="workflow directory")
 
     args = vars(parser.parse_args())
 
