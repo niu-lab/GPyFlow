@@ -10,14 +10,14 @@ setup(
     author='ZhangYu',
     author_email='polozy314@gmail.com',
     description='A simple workflow/pipeline framework for command line.',
-    packages=['flow'],
+    packages=['GPyFlow'],
     include_package_data=True,
     zip_safe=False,
     platforms='linux',
     python_requires='>=3.5',
     entry_points={
         'console_scripts': [
-            'pyflow = flow.gpyflow:main',
+            'pyflow = GPyFlow.pyflow:main',
         ],
     }
 )

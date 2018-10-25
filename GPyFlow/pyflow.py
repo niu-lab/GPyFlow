@@ -1,7 +1,6 @@
 import argparse
-from flow.workflow import run_target
-from flow.filetools import package
-import os
+from .workflow import run_target
+from .filetools import package
 
 args = dict()
 
