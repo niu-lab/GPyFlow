@@ -5,7 +5,7 @@ from .filetools import package
 args = dict()
 
 
-def handle_commadline():
+def handle_commandline():
     global args
     parser = argparse.ArgumentParser(prog="pyflow")
     subparsers = parser.add_subparsers(dest='sub-command')
@@ -41,7 +41,7 @@ def run(inputs, out_dir, workflow):
 
 
 def main():
-    handle_commadline()
+    handle_commandline()
     if args.get("sub-command") == "run":
         run(args.get("input"),
             args.get("output"),
