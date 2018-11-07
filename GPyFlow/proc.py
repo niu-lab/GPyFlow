@@ -1,6 +1,6 @@
 from multiprocessing import Process
 from subprocess import Popen, PIPE, STDOUT
-from .errors import RunCmdException
+from GPyFlow.errors import RunCmdException
 
 
 def run_cmd(cmdline):

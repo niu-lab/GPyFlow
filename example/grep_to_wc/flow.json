@@ -1,70 +1,27 @@
 {
+  "workflow": {
+    "nodes": [
+      {
+        "name": "count",
+        "cmd": "wc -l <IN> > [#OUTPREFIX#.out]"
+      },
+      {
+        "name": "grep",
+        "cmd": "grep #CHAR# <#INFILE#> > [#OUTPREFIX#.grep.out]"
+      }
+    ],
+    "links": [
+      {
+        "from": "Step-grep",
+        "to": "Step-count",
+        "frompid": "#OUTPREFIX#.grep.out",
+        "topid": "IN"
+      }
+    ]
+  },
   "macros": {
     "INFILE": "",
     "CHAR": "",
     "OUTPREFIX": ""
-  },
-  "workflow": {
-    "grep-step": {
-      "pres": [
-      ],
-      "input": [
-        "#INFILE#"
-      ],
-      "output": [
-        "#OUTPREFIX#.grep.out"
-      ],
-      "command": {
-        "path": "grep",
-        "parameters": [
-          {
-            "prefix": "",
-            "key": "",
-            "sep": "",
-            "value": "#CHAR#"
-          },
-          {
-            "prefix": "",
-            "key": "",
-            "sep": "",
-            "value": "#IN[0]#"
-          },
-          {
-            "prefix": "",
-            "key": ">",
-            "sep": " ",
-            "value": "#OUT[0]#"
-          }
-        ]
-      }
-    },
-    "count-step": {
-      "pres": [
-        "grep-step"
-      ],
-      "input": [
-        "#OUTPREFIX#.grep.out"
-      ],
-      "output": [
-        "#OUTPREFIX#.count.out"
-      ],
-      "command": {
-        "path": "wc",
-        "parameters": [
-          {
-            "prefix": "-",
-            "key": "l",
-            "sep": " ",
-            "value": "#IN[0]#"
-          },
-          {
-            "prefix": "",
-            "key": ">",
-            "sep": " ",
-            "value": "#OUT[0]#"
-          }
-        ]
-      }
-    }
   }
 }

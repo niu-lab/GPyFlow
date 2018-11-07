@@ -3,12 +3,20 @@
 import re
 import json
 import os
+import sys
+import io
 from zipfile import ZipFile
 import shutil
-from .errors import MacroError
-from .step import Step
-from .filetools import dir_create
-from .log import getlogger
+from GPyFlow.errors import MacroError
+from GPyFlow.step import Step
+from GPyFlow.filetools import dir_create
+from GPyFlow.log import getlogger
+
+# step name can only by numbers, letters and underscores
+step_re_pattern = re.compile(r"Step-([a-z0-9_]+)")
+# . for extension; / for path;
+input_pattern = re.compile(r"<([A-Za-z0-9_./#]+)>")
+output_pattern = re.compile(r"\[([A-Za-z0-9_./#]+)\]")
 
 
 class WorkFlow(object, ):
@@ -29,21 +37,89 @@ class WorkFlow(object, ):
         self.waits = list()
         pass
 
-    def load_from_file(self, filepath):
+    @staticmethod
+    def __get_step_name(step_string):
+        matched = step_re_pattern.match(step_string)
+        if matched:
+            return matched.groups()[0]
+        return ""
+
+    def __render_workflow(self, origin_workflow):
+        rendered = {}
+        links = origin_workflow["links"]
+        nodes = origin_workflow["nodes"]
+
+        def find_index_of_step(step_name):
+            for i, node in enumerate(nodes):
+                if node["name"] == step_name:
+                    return i
+
+        for link in links:
+            from_step = self.__get_step_name(link["from"])
+            from_index = find_index_of_step(from_step)
+            to_step = self.__get_step_name(link["to"])
+            to_index = find_index_of_step(to_step)
+
+            if not rendered.get(from_step):
+                rendered[from_step] = {}
+                rendered[from_step]["pres"] = []
+
+            if not rendered.get(to_step):
+                rendered[to_step] = {}
+                rendered[to_step]["pres"] = []
+
+            if not (from_step in rendered[to_step]["pres"]):
+                rendered[to_step]["pres"].append(from_step)
+
+            if step_re_pattern.search(link["frompid"]) or \
+                    step_re_pattern.search(link["topid"]):
+                continue
+            # remove out port []
+            replace_str = "{}".format(link["frompid"])
+            origin_str = "[{}]".format(link["frompid"])
+            nodes[from_index]["cmd"] = nodes[from_index]["cmd"].replace(origin_str, replace_str)
+
+            # connect port remove in port <>
+            origin_str = "<{}>".format(link["topid"])
+            nodes[to_index]["cmd"] = nodes[to_index]["cmd"].replace(origin_str, replace_str)
+
+        for node in nodes:
+            # remove in <>
+            matched = input_pattern.findall(node["cmd"])
+            if matched:
+                for _input in matched:
+                    origin_str = "<{}>".format(_input)
+                    replace_str = "{}".format(_input)
+                    node["cmd"] = node["cmd"].replace(origin_str, replace_str)
+
+            # remove in []
+            matched = output_pattern.findall(node["cmd"])
+            if matched:
+                for _input in matched:
+                    origin_str = "[{}]".format(_input)
+                    replace_str = "{}".format(_input)
+                    node["cmd"] = node["cmd"].replace(origin_str, replace_str)
+
+            rendered[node["name"]]["cmd"] = node["cmd"]
+        return rendered
+
+    def __load_from_file(self, filepath):
         with open(filepath, 'r') as open_file:
             self.dicts = json.load(open_file)
             self.macros = self.dicts.get("macros")
-            self.workflow = self.dicts.get("workflow")
+            origin_workflow = self.dicts.get("workflow")
+            self.workflow = self.__render_workflow(origin_workflow)
 
-    def read_inputs(self, inputs_filename):
+    def __read_inputs(self, inputs_filename):
         pattern = r'([A-Z0-9_]+)=(\S+)'
         compiled = re.compile(pattern)
-        if inputs_filename:
-            with open(inputs_filename, "r") as inputs_filen:
-                for line in inputs_filen:
-                    matched = compiled.match(line.strip())
-                    if matched:
-                        self.macros[matched.groups()[0]] = matched.groups()[1].replace("\\", "\\\\")
+        with open(inputs_filename, "r") as inputs_file:
+            for line in inputs_file:
+                matched = compiled.match(line.strip())
+                if not matched:
+                    continue
+                else:
+                    self.macros[matched.groups()[0]] = matched.groups()[1].replace("\\", "\\\\")
 
     def __skip_step(self):
         skip_steps = list()
@@ -60,47 +136,21 @@ class WorkFlow(object, ):
 
         pass
 
-    def init(self):
-        workflow_file = os.path.join(self.workflow_dir, "flow.json")
-        self.load_from_file(workflow_file)
-        self.read_inputs(self.inputs)
-        os.chdir(self.workflow_dir)
-        # 设置环境变量
-        self.__set_environment()
-        # 宏替换
-        if self.macros:
-            self.__macro_replace()
-        # 加载步骤
-        if self.workflow:
-            for name in self.workflow:
-                step = Step(self, name)
-                step.load_from_dict(self.workflow[name])
-                self.steps.append(step)
-        self.__skip_step()
-
-    def work(self):
-        self.console_logger.info("Workflow start.")
-        self.__check()
-        while not self.__finished_check():
-            self.__run()
-            self.__wait()
-        self.console_logger.info("Workflow end.")
-
     def __run(self):
         self.to_runs = list()
         for step in self.steps:
             if not step.finished and len(step.pres) == 0:
                 self.to_runs.append(step)
         for step in self.to_runs:
-            # try:
-            step.run()
-            self.console_logger.info("Step-{}:start.".format(step.name))
-            self.file_logger.info("CMD:{}".format(step.runcmd))
-        # except Exception as e:
-        #     self.console_logger.error(e.with_traceback(e.__traceback__))
-        #     self.console_logger.error("Step-{}:start failed.".format(step.name))
-        #     self.console_logger.error("Workflow failed.")
-        #     exit(1)
+            try:
+                step.run()
+                self.console_logger.info("Step-{}:start.".format(step.name))
+                self.file_logger.info("CMD:{}".format(step.command))
+            except Exception as e:
+                self.console_logger.error("Step-{}:failed.".format(step.name))
+                self.console_logger.error("Workflow failed.")
+                self.console_logger.exception(e)
+                exit(1)
 
     def __wait(self):
         for finished_step in self.to_runs:
@@ -154,8 +204,6 @@ class WorkFlow(object, ):
     @staticmethod
     def __set_environment():
         path = os.environ.get("PATH")
-        # input_path = os.path.join(os.path.curdir, "input")
-        # path = path + ":{}".format(os.path.abspath(os.curdir)) + ":{}".format(os.path.abspath(input_path))
         path = path + ":{}".format(os.path.abspath(os.curdir))
         os.environ["PATH"] = path
 
@@ -167,34 +215,78 @@ class WorkFlow(object, ):
         write_to_file.write(("{}" + os.linesep).format(step_name))
         write_to_file.close()
 
+    def preview(self, filename=None):
+        output = io.StringIO()
+        for step in self.workflow:
+            output.write(self.workflow[step]["cmd"])
+            output.write(os.linesep)
+
+        content = output.getvalue()
+        if filename:
+            with open(filename, "w+") as out_file:
+                out_file.write(content)
+        sys.stdout.write(content)
+        sys.stdout.flush()
+        output.close()
+        pass
+
+    def init(self):
+        workflow_file = os.path.join(self.workflow_dir, "flow.json")
+        self.__load_from_file(workflow_file)
+        self.__read_inputs(self.inputs)
+        os.chdir(self.workflow_dir)
+        # 设置环境变量
+        self.__set_environment()
+        # 宏替换
+        if self.macros:
+            self.__macro_replace()
+        # 加载步骤
+        if self.workflow:
+            for name in self.workflow:
+                step = Step(self, name)
+                step.load_from_dict(self.workflow[name])
+                self.steps.append(step)
+        self.__skip_step()
+
+    def work(self):
+        self.console_logger.info("Workflow start.")
+        self.__check()
+        while not self.__finished_check():
+            self.__run()
+            self.__wait()
+        self.console_logger.info("Workflow end.")
+
 
 # run workflow directory
-def run_workflow(workflow_dir, inputs):
+def run_workflow(preview, workflow_dir, inputs):
     workflow = WorkFlow(workflow_dir, inputs)
     workflow.init()
-    workflow.work()
+    if preview:
+        workflow.preview()
+    else:
+        workflow.work()
 
 
 # run *.zip file
-def run_target_zip(flow, inputs, target_dir):
+def run_target_zip(preview, flow, inputs, target_dir):
     dir_create(target_dir)
     with ZipFile(flow, 'r') as zipfile:
         zipfile.extractall(target_dir)
-    run_workflow(target_dir, inputs)
+    run_workflow(preview, target_dir, inputs)
 
 
 # run *.json file
-def run_targe_json(flow, inputs, target_dir):
+def run_targe_json(preview, flow, inputs, target_dir):
     dir_create(target_dir)
     des = os.path.join(target_dir, "flow.json")
     shutil.copy(flow, des)
-    run_workflow(target_dir, inputs)
+    run_workflow(preview, target_dir, inputs)
 
 
 # run
-def run_target(flow, inputs, target_dir):
+def run_target(preview, flow, inputs, target_dir):
     ext = os.path.basename(flow).split(".")[-1]
     if ext == "zip":
-        run_target_zip(flow, inputs, target_dir)
+        run_target_zip(preview, flow, inputs, target_dir)
     else:
-        run_targe_json(flow, inputs, target_dir)
+        run_targe_json(preview, flow, inputs, target_dir)

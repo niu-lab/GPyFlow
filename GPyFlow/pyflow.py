@@ -1,8 +1,17 @@
 import argparse
-from .workflow import run_target
-from .filetools import package
+from GPyFlow.workflow import run_target
+from GPyFlow.filetools import package
 
 args = dict()
+
+
+def str2bool(v):
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
 def handle_commandline():
@@ -23,6 +32,14 @@ def handle_commandline():
                             required=True,
                             help="output directory"
                             )
+
+    run_parser.add_argument("--preview",
+                            default=False,
+                            type=str2bool,
+                            required=False,
+                            help="preview to run commands"
+                            )
+
     run_parser.add_argument("workflow",
                             help="workflow directory or workflow.json")
 
@@ -36,14 +53,15 @@ def tar(workflow_dir):
     package(workflow_dir)
 
 
-def run(inputs, out_dir, workflow):
-    run_target(workflow, inputs, out_dir)
+def run(preview, inputs, out_dir, workflow):
+    run_target(preview, workflow, inputs, out_dir)
 
 
 def main():
     handle_commandline()
     if args.get("sub-command") == "run":
-        run(args.get("input"),
+        run(args.get("preview"),
+            args.get("input"),
             args.get("output"),
             args.get('workflow'))
     if args.get("sub-command") == "tar":
