@@ -7,10 +7,11 @@ import sys
 import io
 from zipfile import ZipFile
 import shutil
-from GPyFlow.errors import MacroError
+from GPyFlow.errors import MacroError, CycleInWorkflowError
 from GPyFlow.step import Step
 from GPyFlow.filetools import dir_create
 from GPyFlow.log import getlogger
+from GPyFlow.proc import OutWriter
 
 # step name can only by numbers, letters and underscores
 step_re_pattern = re.compile(r"Step-([a-z0-9_]+)")
@@ -25,12 +26,14 @@ class WorkFlow(object, ):
         self.workflow_dir = os.path.abspath(workflow_dir)
         self.inputs = os.path.abspath(inputs)
         self.dicts = dict()
-        self.status_file = os.path.join(self.workflow_dir, "{}.ok.log".format(self.name))
+        self.status_filename = os.path.join(self.workflow_dir, "{}.ok.log".format(self.name))
         self.macros = dict()
         self.workflow = dict()
         self.console_logger = getlogger(__name__)
         self.file_logger = \
             getlogger("cmd", os.path.join(workflow_dir, "{}.command.log".format(self.name)))
+
+        self.out_writer = OutWriter(os.path.join(workflow_dir, "{}.out".format(self.name)))
         self.steps = list()
         self.to_runs = list()
         self.finished = False
@@ -123,8 +126,8 @@ class WorkFlow(object, ):
 
     def __skip_step(self):
         skip_steps = list()
-        if os.path.exists(self.status_file):
-            with open(self.status_file) as file:
+        if os.path.exists(self.status_filename):
+            with open(self.status_filename) as file:
                 for line in file:
                     skip_steps.append(line.strip())
             for step in self.steps:
@@ -150,7 +153,6 @@ class WorkFlow(object, ):
                 self.console_logger.error("Step-{}:failed.".format(step.name))
                 self.console_logger.error("Workflow failed.")
                 self.console_logger.exception(e)
-                exit(1)
 
     def __wait(self):
         for finished_step in self.to_runs:
@@ -183,23 +185,52 @@ class WorkFlow(object, ):
                 return False
         return True
 
-    def __check(self):
-        steps = dict()
-        # post-step of every step
-        for step in self.steps:
-            for step_pres_name in step.pres:
-                if not steps.get(step_pres_name):
-                    steps[step_pres_name] = list()
-                steps[step_pres_name].append(step.name)
-        found = dict()
+    def __check(self, preview=False):
 
-        # width-first
-        for i in steps:
-            found[i] = True
-            for j in steps[i]:
-                if found.get(j):
-                    raise Exception("cycle in workflow,from {i} to {j}".format(i=i, j=j))
-                found[j] = True
+        output = io.StringIO()
+
+        steps = list()
+        stack = list()
+        for step in self.steps:
+            new_step = dict()
+            new_step["name"] = step.name
+            new_step["pres"] = list(step.pres)
+            new_step["command"] = step.command
+            steps.append(new_step)
+
+        for step in steps:
+            if len(step["pres"]) == 0:
+                stack.append(step)
+                steps.remove(step)
+
+        no = 1
+        while len(stack) > 0:
+            pop_step = stack.pop()
+            output.write(" [{}] ".format(no))
+            output.write(pop_step["command"])
+            output.write(os.linesep)
+            no += 1
+
+            for step in steps:
+                if pop_step["name"] in step["pres"]:
+                    step["pres"].remove(pop_step["name"])
+
+            for step in steps:
+                if len(step["pres"]) == 0:
+                    stack.append(step)
+                    steps.remove(step)
+
+        if len(steps) > 0:
+            cycles = list()
+            for step in steps:
+                cycles.append(step["name"])
+            raise CycleInWorkflowError(cycles)
+
+        if preview:
+            content = output.getvalue()
+            sys.stdout.write(content)
+            sys.stdout.flush()
+        output.close()
 
     @staticmethod
     def __set_environment():
@@ -208,27 +239,15 @@ class WorkFlow(object, ):
         os.environ["PATH"] = path
 
     def __write_status(self, step_name):
-        if not os.path.exists(self.status_file):
-            write_to_file = open(self.status_file, "w")
+        if not os.path.exists(self.status_filename):
+            write_to_file = open(self.status_filename, "w")
         else:
-            write_to_file = open(self.status_file, "a")
+            write_to_file = open(self.status_filename, "a")
         write_to_file.write(("{}" + os.linesep).format(step_name))
         write_to_file.close()
 
-    def preview(self, filename=None):
-        output = io.StringIO()
-        for step in self.workflow:
-            output.write(self.workflow[step]["cmd"])
-            output.write(os.linesep)
-
-        content = output.getvalue()
-        if filename:
-            with open(filename, "w+") as out_file:
-                out_file.write(content)
-        sys.stdout.write(content)
-        sys.stdout.flush()
-        output.close()
-        pass
+    def preview(self):
+        self.__check(preview=True)
 
     def init(self):
         workflow_file = os.path.join(self.workflow_dir, "flow.json")
