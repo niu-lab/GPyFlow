@@ -57,19 +57,16 @@ class WorkFlow(object, ):
                 if node["name"] == step_name:
                     return i
 
+        # init
+        for node in nodes:
+            rendered[node["name"]] = {}
+            rendered[node["name"]]["pres"] = []
+
         for link in links:
             from_step = self.__get_step_name(link["from"])
             from_index = find_index_of_step(from_step)
             to_step = self.__get_step_name(link["to"])
             to_index = find_index_of_step(to_step)
-
-            if not rendered.get(from_step):
-                rendered[from_step] = {}
-                rendered[from_step]["pres"] = []
-
-            if not rendered.get(to_step):
-                rendered[to_step] = {}
-                rendered[to_step]["pres"] = []
 
             if not (from_step in rendered[to_step]["pres"]):
                 rendered[to_step]["pres"].append(from_step)
