@@ -110,8 +110,14 @@ class WorkFlow(object, ):
             origin_workflow = self.dicts.get("workflow")
             self.workflow = self.__render_workflow(origin_workflow)
 
+    @staticmethod
+    def __escape(origin_str):
+        render = origin_str.replace("\"", "\\\"")
+        render = render.replace("\\t", "\\\\t")
+        return render
+
     def __read_inputs(self, inputs_filename):
-        pattern = r'([A-Z0-9_]+)=(\S+)'
+        pattern = r'([A-Z0-9_]+)=(\S.*)'
         compiled = re.compile(pattern)
         with open(inputs_filename, "r") as inputs_file:
             for line in inputs_file:
@@ -119,7 +125,8 @@ class WorkFlow(object, ):
                 if not matched:
                     continue
                 else:
-                    self.macros[matched.groups()[0]] = matched.groups()[1].replace("\\", "\\\\")
+                    self.macros[matched.groups()[0]] = self.__escape(matched.groups()[1])
+                    # self.macros[matched.groups()[0]] = matched.groups()[1]
 
     def __skip_step(self):
         skip_steps = list()
@@ -172,7 +179,7 @@ class WorkFlow(object, ):
         content_str = json.dumps(self.workflow)
         for key in self.macros:
             value = self.macros[key]
-            marco_string = "#{}#".format(key)
+            marco_string = '#{}#'.format(key)
             content_str = content_str.replace(marco_string, value)
         self.workflow = json.loads(content_str)
 
