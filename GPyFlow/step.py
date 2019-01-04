@@ -27,7 +27,7 @@ class Step(object):
             else:
                 raise Exception("{} not exist".format(self.workdir))
         # 生成运行命令
-        self.worker = cmdworker(self.command, self.workflow.out_writer)
+        self.worker = cmdworker(self.command, self.workflow.out_writer, self.workflow.err_writer)
         self.worker.start()
         if self.olddir:
             os.chdir(self.olddir)

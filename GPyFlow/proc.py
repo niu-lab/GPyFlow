@@ -1,30 +1,35 @@
 from multiprocessing import Process, Lock
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen, PIPE
 from GPyFlow.errors import RunCmdException
-from GPyFlow.log import getlogger
+import os
 
 
-class OutWriter(object):
+class Writer(object):
     def __init__(self, filename):
-        self.logger = getlogger("out", file=filename)
+        if not os.path.exists(filename):
+            file = open(filename, "w+")
+            file.close()
+        self._filename = filename
         self._lock = Lock()
 
     def write(self, s):
         self._lock.acquire()
-        self.logger.info(s)
+        with open(self._filename, "a") as write_file:
+            write_file.write(s)
+            write_file.flush()
         self._lock.release()
 
 
-def run_cmd(cmdline, writer):
-    with Popen("bash", stdin=PIPE, stdout=PIPE, stderr=STDOUT) as proc:
+def run_cmd(cmdline, out_writer, err_writer):
+    with Popen("bash", stdin=PIPE, stdout=PIPE, stderr=PIPE) as proc:
         outs, errs = proc.communicate(cmdline.encode('utf-8'))
         return_code = proc.returncode
         if outs:
             outs_str = outs.decode('utf-8')
-            writer.write(outs_str)
+            out_writer.write(outs_str)
         if errs:
             errs_str = errs.decode('utf-8')
-            writer.write(errs_str)
+            err_writer.write(errs_str)
 
         if proc.returncode != 0:
             raise RunCmdException(cmdline)
@@ -36,5 +41,5 @@ def worker(func, *args, **kwargs):
     return proc
 
 
-def cmdworker(cmdline, out_writer):
-    return worker(func=run_cmd, cmdline=cmdline, writer=out_writer)
+def cmdworker(cmdline, out_writer, err_writer):
+    return worker(func=run_cmd, cmdline=cmdline, out_writer=out_writer, err_writer=err_writer)

@@ -3,7 +3,6 @@
 import re
 import json
 import os
-import sys
 import io
 from zipfile import ZipFile
 import shutil
@@ -11,7 +10,7 @@ from GPyFlow.errors import MacroError, CycleInWorkflowError
 from GPyFlow.step import Step
 from GPyFlow.filetools import dir_create
 from GPyFlow.log import getlogger
-from GPyFlow.proc import OutWriter
+from GPyFlow.proc import Writer
 
 # step name can only by numbers, letters and underscores
 step_re_pattern = re.compile(r"Step-([a-z0-9_]+)")
@@ -33,7 +32,8 @@ class WorkFlow(object, ):
         self.file_logger = \
             getlogger("cmd", os.path.join(workflow_dir, "{}.command.log".format(self.name)))
 
-        self.out_writer = OutWriter(os.path.join(workflow_dir, "{}.out".format(self.name)))
+        self.out_writer = Writer(os.path.abspath(os.path.join(workflow_dir, "{}.out".format(self.name))))
+        self.err_writer = Writer(os.path.abspath(os.path.join(workflow_dir, "{}.err".format(self.name))))
         self.steps = list()
         self.to_runs = list()
         self.finished = False
