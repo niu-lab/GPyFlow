@@ -7,8 +7,7 @@ python3 setup.py install
 ```
 
 # Use Web Interface to Define a workflow
-http://niulab.scgrid.cn/GPyFlow/
-
+[GPyFlow Visual WebSite](http://101.200.50.190/GPyFlow/). 
 # Commands
 tar workflow directory to zip file
 ```angular2html
