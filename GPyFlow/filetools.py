@@ -1,5 +1,6 @@
 import os
 import shutil
+import json
 
 
 def dir_create(dir_path):
@@ -21,3 +22,13 @@ def get_file_firstname(filename):
         splits = filename.split('.')
         return splits[0]
     raise Exception("can't get {filename} fisrtname.".format(filename=filename))
+
+
+def extract_macros(_workflow_file, _macros_file):
+    with open(_workflow_file, 'r') as workflow_file:
+        workflow_dict = json.load(workflow_file)
+        macros = workflow_dict.get("macros")
+        with open(_macros_file, "w+") as macro_file:
+            for macro in macros:
+                line = "{}=".format(macro) + os.linesep
+                macro_file.write(line)

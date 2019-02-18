@@ -1,6 +1,6 @@
 import argparse
 from GPyFlow.workflow import run_target
-from GPyFlow.filetools import package
+from GPyFlow.filetools import package, extract_macros
 
 args = dict()
 
@@ -21,6 +21,7 @@ def handle_commandline():
     subparsers.required = True
     run_parser = subparsers.add_parser("run")
     tar_parser = subparsers.add_parser("tar")
+    extract_parser = subparsers.add_parser("extract")
 
     run_parser.add_argument("-i", "--input",
                             type=str,
@@ -46,6 +47,13 @@ def handle_commandline():
     tar_parser.add_argument("workflow_dir",
                             help="workflow directory")
 
+    extract_parser.add_argument("-f", "--workflow",
+                                type=str,
+                                required=True,
+                                help="workflow file")
+    extract_parser.add_argument("macros",
+                                help="extract macros")
+
     args = vars(parser.parse_args())
 
 
@@ -57,6 +65,10 @@ def run(preview, inputs, out_dir, workflow):
     run_target(preview, workflow, inputs, out_dir)
 
 
+def extract(workflow_file, macro_file):
+    extract_macros(workflow_file, macro_file)
+
+
 def main():
     handle_commandline()
     if args.get("sub-command") == "run":
@@ -66,6 +78,10 @@ def main():
             args.get('workflow'))
     if args.get("sub-command") == "tar":
         tar(args.get("workflow_dir"))
+
+    if args.get("sub-command") == "extract":
+        extract(args.get("workflow"),
+                args.get("macros"))
 
 
 if __name__ == '__main__':
