@@ -1,5 +1,5 @@
 # coding: utf-8
-
+import sys
 import re
 import json
 import os
@@ -117,7 +117,7 @@ class WorkFlow(object, ):
         return render
 
     def __read_inputs(self, inputs_filename):
-        pattern = r'([A-Z0-9_]+)=(\S.*)'
+        pattern = r'([A-Z0-9_]+)=(.+)'
         compiled = re.compile(pattern)
         with open(inputs_filename, "r") as inputs_file:
             for line in inputs_file:
@@ -125,6 +125,8 @@ class WorkFlow(object, ):
                 if not matched:
                     continue
                 else:
+                    if len(matched.groups()[1]) == 0:
+                        raise MacroError(matched.groups()[0])
                     self.macros[matched.groups()[0]] = self.__escape(matched.groups()[1])
                     # self.macros[matched.groups()[0]] = matched.groups()[1]
 
@@ -173,9 +175,6 @@ class WorkFlow(object, ):
                         step.pres.remove(finished_step.name)
 
     def __macro_replace(self):
-        for key in self.macros:
-            if len(self.macros[key]) == 0:
-                raise MacroError(key)
         content_str = json.dumps(self.workflow)
         for key in self.macros:
             value = self.macros[key]
