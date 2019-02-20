@@ -117,16 +117,14 @@ class WorkFlow(object, ):
         return render
 
     def __read_inputs(self, inputs_filename):
-        pattern = r'([A-Z0-9_]+)=(.*)\n'
+        pattern = r'([A-Z0-9_]+)=(.+)\n'
         compiled = re.compile(pattern)
         with open(inputs_filename, "r") as inputs_file:
             for line in inputs_file:
                 matched = compiled.match(line)
                 if not matched:
-                    continue
+                    raise MacroError(line)
                 else:
-                    if len(matched.groups()[1]) == 0:
-                        raise MacroError(matched.groups()[0])
                     self.macros[matched.groups()[0]] = self.__escape(matched.groups()[1])
 
     def __skip_step(self):

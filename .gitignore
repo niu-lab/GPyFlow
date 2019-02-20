@@ -96,6 +96,7 @@ ENV/
 tmp/
 test/ref/
 rsync_to_yuan.sh
+rsync_to_deepin.sh
 exclude.txt
 .DS_Store
 .python-version
@@ -103,5 +104,3 @@ example/*/out_dir/
 tools/
 test/
 example/*/out/
-
-

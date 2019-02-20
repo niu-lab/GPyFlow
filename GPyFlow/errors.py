@@ -3,7 +3,7 @@ class MacroError(Exception):
         self.macro = macro
 
     def __str__(self):
-        return "macro {} value can't be empty.".format(self.macro)
+        return "{} value error.".format(self.macro)
 
 
 class CycleInWorkflowError(Exception):
