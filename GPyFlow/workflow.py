@@ -117,7 +117,7 @@ class WorkFlow(object, ):
         return render
 
     def __read_inputs(self, inputs_filename):
-        pattern = r'([A-Z0-9_]+)=(.+)'
+        pattern = r'([A-Z0-9_]+)=(.*)'
         compiled = re.compile(pattern)
         with open(inputs_filename, "r") as inputs_file:
             for line in inputs_file:
@@ -128,7 +128,6 @@ class WorkFlow(object, ):
                     if len(matched.groups()[1]) == 0:
                         raise MacroError(matched.groups()[0])
                     self.macros[matched.groups()[0]] = self.__escape(matched.groups()[1])
-                    # self.macros[matched.groups()[0]] = matched.groups()[1]
 
     def __skip_step(self):
         skip_steps = list()
@@ -268,11 +267,11 @@ class WorkFlow(object, ):
                 step = Step(self, name)
                 step.load_from_dict(self.workflow[name])
                 self.steps.append(step)
-        self.__skip_step()
 
     def work(self):
         self.console_logger.info("Workflow start.")
         self.__check()
+        self.__skip_step()
         while not self.__finished_check():
             self.__run()
             self.__wait()
