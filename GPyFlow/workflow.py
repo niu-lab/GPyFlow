@@ -117,11 +117,11 @@ class WorkFlow(object, ):
         return render
 
     def __read_inputs(self, inputs_filename):
-        pattern = r'([A-Z0-9_]+)=(.*)'
+        pattern = r'([A-Z0-9_]+)=(.*)\n'
         compiled = re.compile(pattern)
         with open(inputs_filename, "r") as inputs_file:
             for line in inputs_file:
-                matched = compiled.match(line.strip())
+                matched = compiled.match(line)
                 if not matched:
                     continue
                 else:
