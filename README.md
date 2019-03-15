@@ -1,20 +1,30 @@
 # GPyFlow
-GPyFlow is simple and easy to run local workflow.
+GPyFlow is simple and easy engine to run local workflow.
 
 # Install
 ```angular2html
 python3 setup.py install
 ```
 
-# Use Web Interface to Define a workflow
+# Use Web Editor to Define a Workflow
 [GPyFlow Visual WebSite](http://niulab.scgrid.cn/GPyFlow/). 
-# Commands
-tar workflow directory to zip file
-```angular2html
-pyflow tar [dir]
+# Usage
+- ## extract macros
 ```
-run workflow
+pyflow extract -f flow.json -o input.macros
+```
+- ## run workflow
+```angular2
+pyflow run -i input.macros -o output_dir flow.json
+# or
+pyflow run -i input.macros -o output_dir workflow.zip
+```
+- ## tar workflow directory to share
 ```angular2html
-pyflow run -i inputs.txt -o output_dir flow.json
-pyflow run -i inputs.txt -o output_dir workflow.zip
+pyflow tar workflow_dir
+```
+- ## more 
+preview commamd lines before run a workflow
+```angular2
+pyflow run --preview true -i input.macros -o output_dir flow.json
 ```
