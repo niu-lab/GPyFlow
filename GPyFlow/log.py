@@ -15,7 +15,7 @@ LEVEL_DICT = {
 
 
 def getlogger(name, file=None, level="INFO"):
-    logger = logging.getLogger(name + uuid.uuid4())
+    logger = logging.getLogger(name + uuid.uuid4().hex)
     if file:
         handler = logging.FileHandler(file)
     else:
