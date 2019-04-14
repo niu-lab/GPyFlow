@@ -1,5 +1,6 @@
 import logging
 import sys
+import uuid
 
 format_string = '[%(asctime)s][%(levelname)s]:%(message)s'
 datefmt_string = '%Y-%m-%d %H:%M:%S'
@@ -14,7 +15,7 @@ LEVEL_DICT = {
 
 
 def getlogger(name, file=None, level="INFO"):
-    logger = logging.getLogger(name)
+    logger = logging.getLogger(name + uuid.uuid4())
     if file:
         handler = logging.FileHandler(file)
     else:
