@@ -123,7 +123,7 @@ class WorkFlow(object, ):
             for line in inputs_file:
                 matched = compiled.match(line)
                 if not matched:
-                    raise MacroError(line)
+                    continue
                 else:
                     self.macros[matched.groups()[0]] = self.__escape(matched.groups()[1])
 
