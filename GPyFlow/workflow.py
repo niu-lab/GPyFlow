@@ -150,22 +150,21 @@ class WorkFlow(object, ):
         for step in self.to_runs:
             try:
                 step.run()
-                self.console_logger.info("Step-{}:start.".format(step.name))
+                self.console_logger.info("Workflow-{0},Step-{1}:start.".format(self.name, step.name))
                 self.file_logger.info("CMD:{}".format(step.command))
             except Exception as e:
-                self.console_logger.error("Step-{}:failed.".format(step.name))
-                self.console_logger.error("Workflow failed.")
+                self.console_logger.error("Workflow-{0},Step-{1}:failed.".format(self.name, step.name))
                 self.console_logger.exception(e)
 
     def __wait(self):
         for finished_step in self.to_runs:
             finished_step.join()
             if finished_step.error:
-                self.console_logger.error("Step-{}:error.".format(finished_step.name))
-                self.console_logger.error("Workflow break off.")
+                self.console_logger.error("Workflow-{0},Step-{1}:error.".format(self.name, finished_step.name))
+                self.console_logger.error("Workflow-{0} break off.".format(self.name))
                 exit(1)
             else:
-                self.console_logger.info("Step-{}:end.".format(finished_step.name))
+                self.console_logger.info("Workflow-{0},Step-{1}:end.".format(self.name, finished_step.name))
                 self.__write_status(finished_step.name)
                 for step in self.steps:
                     if finished_step.name in step.pres:
@@ -267,13 +266,13 @@ class WorkFlow(object, ):
                 self.steps.append(step)
 
     def work(self):
-        self.console_logger.info("Workflow start.")
+        self.console_logger.info("Workflow-{} start.".format(self.name))
         self.__check()
         self.__skip_step()
         while not self.__finished_check():
             self.__run()
             self.__wait()
-        self.console_logger.info("Workflow end.")
+        self.console_logger.info("Workflow-{} end.".format(self.name))
 
 
 # run workflow directory
